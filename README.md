@@ -36,12 +36,13 @@
 
 ---
 
-#### 5. **Using `WeakMap` to Detect Garbage Collection (GC) Activity**
+#### 5. **Using `WeakMap` and FinalizationRegistry to Detect Garbage Collection (GC) Activity**
    - **Introduction to `WeakMap`**  
      - Explanation of how `WeakMap` works in JavaScript.
    
    - **Tracking Object Collection with `WeakMap`**  
      - Using `WeakMap` to see if objects are garbage-collected, providing insight into potential memory leaks.
+  - FinalizationRegistry
    
 ---
 
@@ -68,11 +69,11 @@
 ---
 
 #### 8. **Case Study: Jest’s Memory Leak Detection Using `WeakMap`**
-   - **How Jest Uses `WeakMap` for Leak Detection**  
-     - Explanation of how Jest leverages `WeakMap` to detect memory leaks in tests.
+   - **How Jest Uses `FinalizationRegistry` for Leak Detection**  
+     - Explanation of how Jest leverages `FinalizationRegistry` to detect memory leaks in tests.
    
    - **Applying the secret Jest Approach in Your Code or Tests**  
-     - Practical steps to integrate a similar `WeakMap` strategy for tracking leaks in your own testing setup.
+     - Practical steps to integrate a similar `FinalizationRegistry` strategy for tracking leaks in your own testing setup.
 
 ---
 
@@ -99,3 +100,4 @@
 #### Refs
 https://jestjs.io/blog/2017/12/18/jest-22#experimental-leak-detection
 https://github.com/jestjs/jest/pull/12973
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
