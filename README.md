@@ -101,3 +101,18 @@
 https://jestjs.io/blog/2017/12/18/jest-22#experimental-leak-detection
 https://github.com/jestjs/jest/pull/12973
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
+https://v8.dev/blog/trash-talk
+https://v8.dev/blog/tracing-js-dom
+
+https://nodejs.org/en/learn/diagnostics/memory/using-gc-traces
+
+### relevant
+https://dev.to/codux/experiments-with-the-javascript-garbage-collector-2ae3
+
+### memory leak in nodejs
+https://github.com/nodejs/node/issues/53335
+https://github.com/nodejs/node/blob/main/test/parallel/test-primitive-timer-leak.js#L15
+https://github.com/nodejs/node/blob/main/test/common/gc.js
+
+### Research
+check if global.gc call minor or mijor gc
