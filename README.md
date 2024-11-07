@@ -1,29 +1,107 @@
 #### 1. **Introduction**
    - Brief overview of the repository and its purpose.
    - Importance of memory management in Node.js applications.
+   The purpose of this repo is to provide tools and tips to debug and prevent memory leaks in node js
+
+   This repo  will mainly talk about node js But it's also relevant to js On the browser Which is usually less a concern because websites die quite Young And some techniques maybe will apply to other languages as well
+   Especially heep snapshots Comparison
+
+   Important note In this readme, sometimes I will simplify things Just because we don't need to To dive To deep into them 
+   If you really want to go deep into things I attached list of references the end of this file 
 
 ---
 
-#### 2. **Background on Memory Management**
-   - **Traditional Memory Leaks in Languages like C**  
-     - How languages without garbage collection (like C) handle memory.
-     - Common pitfalls of manual memory management and how it compares to garbage-collected languages.
+#### 2. **What is a memory leak**
+I heard somewhere that memory leak
+"It's like not checking out of the room when you leave the hotel. The room is there and you are no longer using it, but it wasn't actually freed and other guests can't use it until it is freed."
+In low level languages like C Only memory leaks is when you allocate memory
+And you forget to release it When it's no longer needed
+
+After John McCarthy invented the garbage collector This is no longer the case since  developers don't need to Allocate or release the memory manualy
+
+What is garbage collector GC?
+Garbage collector is a piece of code that responsible to track memory that is not used by the program anymore And reclaim it for Usage of this memory in the future, or Releasing the memory to the operation system
+
+
+ what the garbage collector consider is memory that the program doesn't need anymore?
+  an object a variable or a function Or anything else that consume memory that no one holds a reference to it
+  If the program doesn't have a reference to it It means the program cannot use it, and therefore needs to be reclaimed, Which means as long as you have a reference to an object it should never be collected by your garbage collector
+
+  Our job as developers It's very easy(or at least it seems that way) Don't hold reference to Anything that you don't need anymore 
+
+  So what is a memory leak?
+
+  Usually People calling memory leaks to Describe the situation when A program Consumption of memory grows over time 
+
+  When your memory usage graph look Like Warren Buffett investment portfolio Grass looks like 
+   
+  The problem in this case is very obvious. If you run your program for long enough, you will get out of memory error
+
 
 ---
 
 #### 3. **Understanding Memory Leaks in Node.js**
-   - **What is a Memory Leak in Node.js?**  
-     - Definition and consequences of memory leaks in JavaScript/Node.js applications.
+In order to understand, better memory, leaks, and how to handle them first of all, we need to understand how the garbage collector V8 works
+ v8 gc Is responsible Deduction of unused Memory And reuse the memory occupied by dead objects
+
+ The algorithm V8 GC (Orinoco) uses is (The tracing algorithm)[https://en.wikipedia.org/wiki/Tracing_garbage_collection]
+ Which basically means In order to know which objects are not in use aka Dead objects and need to be Reclaimed for reuse in the future 
+ We trace a set of root objects Every object that is reachable From those root objects Is an object that can be used by the program and therefore a cold alive
+
+ Any other object is a dead object that no one needs anymore
+
+ In a V8, those objects are the stack end global object 
+ *** First tip Any object that is attached, directly or indirectly (by his parent or grandparent object) to the global is going to be alive for the entire time of the application, and there for never be released 
+Don't attach anything (that you don't actually need) to the global 
+
+Functions in the stack can Hold reference to objects by closure 
+If you don't know what closure is, that's the time to go read about that
+
+
+
+
    
    - **How the Garbage Collector (GC) Works in Node.js**  
-     - Explanation of Node.js’s garbage collection process.
-     - Concepts of mark-and-sweep, generational garbage collection, and memory retention.
+
+   In garbage collection there is an important term: “The Generational Hypothesis”. This basically states that most objects die young. In other words, most objects are allocated and then almost immediately become unreachable, from the perspective of the GC. This holds not only for V8 or JavaScript, but for most dynamic languages.
+
+   Leveraging this fact are two GCs in V8 
+     - Minor GC (Scavenger)
+     - Major GC (Mark-Compact)Leveraging
+    the Scavenger is Quicker And handles only new objects 
+
+
+    the Major GC Is slower Consume more resources And responsible for the entire heep
+
+the Minor GC runs more often then the majro gc
+    
+v8 will promote objects, not garbage collected after two Scavenge operations to the old space.
+```
+        young generation         |   old generation
+                                 |
+  nursery     |  intermediate    |
+              |                  |
+ +--------+   |     +--------+   |     +--------+
+ | object |---GC--->| object |---GC--->| object |
+ +--------+   |     +--------+   |     +--------+
+              |                  |
+```
+
+
+
 
 ---
 
 #### 4. **Common Causes of Memory Leaks in Node.js**
    - **Uncleared Listeners and Event Emitters**  
-     - How event listeners, especially in server-based applications, can lead to memory leaks.
+     - Every listenr there in JavaScript is a potential memory leak As long as you don't clear the listener All the objects hold reference by closure And all the objects they are referencing to Will not be collected 
+
+Best practice
+
+Every time you write a listener Also write the code that clear is this listener when it's no longer needed 
+
+Currently the listen, Eric, and all the reference to Some small object
+But in the future, someone can attach to this object, bigger object, and you're fucked
    
    - **Global Variables and Caching**  
      - Risks of caching too much data or keeping references to large objects in global scope.
@@ -31,8 +109,6 @@
    - **Closures and Function Scopes**  
      - Issues arising from closures and retaining variables longer than needed.
    
-   - **Unoptimized Data Structures (e.g., Arrays, Maps)**  
-     - Potential for memory leaks due to large, long-lived collections.
 
 ---
 
@@ -115,4 +191,4 @@ https://github.com/nodejs/node/blob/main/test/parallel/test-primitive-timer-leak
 https://github.com/nodejs/node/blob/main/test/common/gc.js
 
 ### Research
-check if global.gc call minor or mijor gc
+check if global.gc call minor or Major gc
