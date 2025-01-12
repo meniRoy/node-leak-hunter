@@ -132,6 +132,39 @@ But in the future, someone can attach to this object, bigger object, and you're 
 ---
 
 #### 7. **Using the Snip3 Hunt Method**
+heepdumb analysis Will not help you to find
+ where you have a memory leak in the code rether to find what is leaking
+
+The biggest problem In heepdump comparison In memory leak detection
+Is to get rid of the noise
+Anyone that tried To debug memory leak with heep dump in real app knows that It's very hard to find what is leaking
+Before we even talking About finding where it's leaking
+
+For some reason A lot of Memory leaks advisers say that you need to Create a snapshot when that location is up run the application For a long time Then create another snapshot
+compere those snapshots and try to find Biggest objects that are leaking
+
+This method only works for a very simple example
+To give simple example of cold in the memory comparison
+
+But in the real world
+When you're a little look like this
+
+And you're gonna look like this
+
+And then after running your app for a few days to try to "trigger" The memory leak, that's where you end up with 
+
+Usually, that's the point, where developers Come with Genius, ideas like
+Let's just restart the server after every 10 calls You can even configure Kubernetes's to do that for you
+
+
+
+
+I have a better idea hopefully
+Let's look how memories are alocated For the lifetime of our Application
+
+
+
+
    - **Introduction to Snip3 Hunt Methodology**  
      - Brief overview of the “three-snapshot” comparison technique.
    
@@ -167,6 +200,9 @@ But in the future, someone can attach to this object, bigger object, and you're 
    - **Efficient Use of Global Variables and Caches**  
    - **Regularly Profiling and Monitoring Memory Usage**
    - **allways run your jest with --detectLeaks**
+   Always use the function names
+   Trying not to use at all anonymous function Because if any time in the future you will need to use cpu Profiler or memory Profiler, the only thing you will see is anonymous -> anonymous -> fuckmylife -> anonymous
+   If you Will use classes. Instead of anonymous objects. It will be much easier to track memory lakes in the future. 
 
 ---
 
