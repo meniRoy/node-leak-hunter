@@ -1,6 +1,4 @@
 #### 1. **Introduction**
-   - Brief overview of the repository and its purpose.
-   - Importance of memory management in Node.js applications.
    The purpose of this repo is to provide tools and tips to debug and prevent memory leaks in node js
 
    This repo  will mainly talk about node js But it's also relevant to js On the browser Which is usually less a concern because websites die quite Young And some techniques maybe will apply to other languages as well
@@ -45,8 +43,8 @@ In order to understand, better memory, leaks, and how to handle them first of al
  v8 gc Is responsible Deduction of unused Memory And reuse the memory occupied by dead objects
 
  The algorithm V8 GC (Orinoco) uses is (The tracing algorithm)[https://en.wikipedia.org/wiki/Tracing_garbage_collection]
- Which basically means In order to know which objects are not in use aka Dead objects and need to be Reclaimed for reuse in the future 
- We trace a set of root objects Every object that is reachable From those root objects Is an object that can be used by the program and therefore a cold alive
+ Which basically means In order to know which objects are not in use aka Dead objects and need to be Reclaimed
+ We trace a set of root objects Every object that is reachable From those root objects Is an object that can be used by the program and therefore is a alive
 
  Any other object is a dead object that no one needs anymore
 
@@ -132,36 +130,82 @@ But in the future, someone can attach to this object, bigger object, and you're 
 ---
 
 #### 7. **Using the Snip3 Hunt Method**
-heepdumb analysis Will not help you to find
- where you have a memory leak in the code rether to find what is leaking
 
-The biggest problem In heepdump comparison In memory leak detection
-Is to get rid of the noise
-Anyone that tried To debug memory leak with heep dump in real app knows that It's very hard to find what is leaking
-Before we even talking About finding where it's leaking
+**Heap Dump Analysis: Challenges and an Improved Approach**
 
-For some reason A lot of Memory leaks advisers say that you need to Create a snapshot when that location is up run the application For a long time Then create another snapshot
-compere those snapshots and try to find Biggest objects that are leaking
+Heap dump analysis often fails to help pinpoint the root cause of a memory leak. While it can show what is leaking, it struggles to identify where in the code the issue originates. The biggest challenge in using heap dump comparisons to detect memory leaks is separating useful information from noise.
 
-This method only works for a very simple example
-To give simple example of cold in the memory comparison
+Anyone who has tried to debug a memory leak in a real-world application using heap dumps knows how difficult it can be to identify what is leaking—even before considering where the leak originates. Despite this, many advisors suggest the following approach: 
 
-But in the real world
-When you're a little look like this
+1. Create a snapshot when the application starts.  
+2. Run the application for an extended period.  
+3. Take another snapshot.  
+4. Compare the snapshots to identify the largest leaking objects.
 
-And you're gonna look like this
+While this method may work for simple examples, it fails in complex, real-world scenarios. 
 
-And then after running your app for a few days to try to "trigger" The memory leak, that's where you end up with 
+the reason is that in the exmples the memory snapshots compersion looks like this:
+-- show image of simple meory snapshot comprions
+but in the real world it looks like this
+-- show image of very big heap snapshot comprision
+and you will look like this
+--s how image of very Disappointed developer
 
-Usually, that's the point, where developers Come with Genius, ideas like
-Let's just restart the server after every 10 calls You can even configure Kubernetes's to do that for you
+In practice, after running an application for a few days to "trigger" the memory leak, you often end up with so much noise that it’s nearly impossible to find the root cause. This is the point where some developers resort to quick fixes, such as restarting the server after every 10 calls—a workaround that can even be automated using tools like Kubernetes.
 
+the reason for that is how appliciton memory lif sycle looks like:
 
-
-
-I have a better idea hopefully
 Let's look how memories are alocated For the lifetime of our Application
 
+In the beginning, the server allocates a significant amount of memory for initializing objects such as database connections. After the garbage collector (GC) runs, the memory usage is reduced, leaving only the necessary objects.
+
+When the first endpoint is called, additional memory is allocated for initializing various objects. Some of these objects are temporary and will be collected by the GC, while others are retained as they are necessary for the operation of the endpoint.
+
+Additionally, a small memory leak exists. By comparing heap dumps taken immediately after the first GC and the second GC, you can observe the memory leak alongside a significant amount of necessary memory allocations.
+
+This creates a lot of noise in the comparison as we already discussed and it's very hard to Investigate what is the object leakingLet's look how memories are alocated For the lifetime of our Application
+
+In the beginning, the server allocates a significant amount of memory for initializing objects such as database connections. After the garbage collector (GC) runs, the memory usage is reduced, leaving only the necessary objects.
+
+When the first endpoint is called, additional memory is allocated for initializing various objects. Some of these objects are temporary and will be collected by the GC, while others are retained as they are necessary for the operation of the endpoint.
+
+Additionally, a small memory leak exists. By comparing heap dumps taken immediately after the first GC and the second GC, you can observe the memory leak alongside a significant amount of necessary memory allocations.
+
+This creates a lot of noise in the comparison as we already discussed and it's very hard to Investigate what is the object leaking
+![alt text](./assets/final_drop_to_55_memory_leak_graph.png)
+
+
+
+However, there is a better solution: analyzing memory allocations throughout the application's lifecycle. Here's how to do it step by step:
+
+---
+
+### **Improved Memory Leak Detection Approach**
+
+1. **Initial Setup and Noise Reduction**
+   - Begin by disabling modules unrelated to the area you're investigating to reduce noise.
+   - Start the application and trigger all necessary initialization routines. This ensures all essential objects (e.g., ORM objects, database connections, WebSocket handlers, background workers, etc.) are allocated.
+
+2. **First Heap Dump**
+   - Run the garbage collector (GC) to clean up unnecessary objects.
+   - Take the first heap dump, which will represent the memory state immediately after initialization.
+
+3. **Targeted Leak Triggering**
+   - Focus on a specific area of the system that you suspect is leaking. Trigger this area multiple times to make the leak more noticeable.
+   - Run the GC again to clean up temporary allocations, and take the second heap dump.
+
+4. **Third Heap Dump for Noise Reduction**
+   - Wait for a minute or more to allow temporary allocations to stabilize.
+   - Trigger the GC once more to collect all temporary memory allocated between snapshots 1 and 2.
+   - Take a third heap dump.
+
+5. **Comparison for Leak Identification**
+   - Compare memory allocations between snapshot 1 and snapshot 2. Identify memory that was allocated but not removed by the GC in snapshot 3.
+   - This method filters out 99% of the noise caused by temporary allocations, leaving only the true memory leak.
+
+---
+
+By following this approach, you can significantly improve the clarity of your heap dump comparisons and identify memory leaks more effectively. This methodology provides a structured way to isolate leaks while minimizing noise, making debugging in real-world applications far more manageable.
 
 
 
