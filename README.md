@@ -130,12 +130,14 @@ But in the future, someone can attach to this object, bigger object, and you're 
 ---
 
 #### 7. **Using the Snip3 Hunt Method**
+By following this approach, you can significantly improve the clarity of your heap dump comparisons and identify memory leaks more effectively. This methodology provides a structured way to isolate leaks while minimizing noise, making debugging in real-world applications far more manageable.
+
 
 **Heap Dump Analysis: Challenges and an Improved Approach**
 
-Heap dump analysis often fails to help pinpoint the root cause of a memory leak. While it can show what is leaking, it struggles to identify where in the code the issue originates. The biggest challenge in using heap dump comparisons to detect memory leaks is separating useful information from noise.
+Heap dump analysis can show what is leaking, but it dosnot identify where in the code the issue originates. The biggest challenge in using heap dump comparisons to detect memory leaks is separating useful information from noise.
 
-Anyone who has tried to debug a memory leak in a real-world application using heap dumps knows how difficult it can be to identify what is leaking—even before considering where the leak originates. Despite this, many advisors suggest the following approach: 
+Anyone who has tried to debug a memory leak in a real-world application using heap dumps knows how difficult it can be to identify what is leaking—even before considering where the leak originates. many advisors suggest the following approach: 
 
 1. Create a snapshot when the application starts.  
 2. Run the application for an extended period.  
@@ -144,12 +146,22 @@ Anyone who has tried to debug a memory leak in a real-world application using he
 
 While this method may work for simple examples, it fails in complex, real-world scenarios. 
 
-the reason is that in the exmples the memory snapshots compersion looks like this:
--- show image of simple meory snapshot comprions
-but in the real world it looks like this
+the reason is that in the exmples the memory snapshots compersion looks like this:  
+
+
+-- show image of simple meory snapshot comprions  
+
+
+but in the real world it looks like this  
+
+
 -- show image of very big heap snapshot comprision
-and you will look like this
---s how image of very Disappointed developer
+
+
+and you will look like this  
+
+
+-- show image of very Disappointed developer
 
 In practice, after running an application for a few days to "trigger" the memory leak, you often end up with so much noise that it’s nearly impossible to find the root cause. This is the point where some developers resort to quick fixes, such as restarting the server after every 10 calls—a workaround that can even be automated using tools like Kubernetes.
 
@@ -203,21 +215,6 @@ However, there is a better solution: analyzing memory allocations throughout the
    - Compare memory allocations between snapshot 1 and snapshot 2. Identify memory that was allocated but not removed by the GC in snapshot 3.
    - This method filters out 99% of the noise caused by temporary allocations, leaving only the true memory leak.
 
----
-
-By following this approach, you can significantly improve the clarity of your heap dump comparisons and identify memory leaks more effectively. This methodology provides a structured way to isolate leaks while minimizing noise, making debugging in real-world applications far more manageable.
-
-
-
-   - **Introduction to Snip3 Hunt Methodology**  
-     - Brief overview of the “three-snapshot” comparison technique.
-   
-   - **Taking and Comparing Snapshots**  
-     - Step-by-step guide on capturing memory snapshots with Node.js tools (e.g., Chrome DevTools, `node --inspect`).
-     - Analyzing and comparing snapshots to isolate memory leaks over time.
-   
-   - **Example Workflow for Snip3 Hunt**  
-     - A simple example to demonstrate the method in practice.
 
 ---
 
