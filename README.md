@@ -63,6 +63,9 @@ V8's garbage collector (Orinoco) uses a tracing algorithm to manage memory. Here
 
 > **Important**: Any object attached to the global scope (directly or indirectly) will remain alive for the entire application lifetime. Be cautious about adding properties to global objects.
 
+![Memory Leak Detection Graph](./assets/image.png)
+
+
 ### Generational Collection
 
 V8 implements a generational garbage collection strategy based on the "Generational Hypothesis" - the observation that most objects die young. This means:
