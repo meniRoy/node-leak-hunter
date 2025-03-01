@@ -238,40 +238,8 @@ However, there is a better solution: analyzing memory allocations throughout the
    - This method filters out 99% of the noise caused by temporary allocations, leaving only the true memory leak.
 
 
----
 
-#### 8. **Case Study: Jest’s Memory Leak Detection Using `WeakMap`**
-   - **How Jest Uses `FinalizationRegistry` for Leak Detection**  
-     - Explanation of how Jest leverages `FinalizationRegistry` to detect memory leaks in tests.
-   
-   - **Applying the secret Jest Approach in Your Code or Tests**  
-     - Practical steps to integrate a similar `FinalizationRegistry` strategy for tracking leaks in your own testing setup.
 
----
-
-#### 9. **Tools and Techniques for Memory Leak Detection**
-   - **Node.js Native Tools**  
-     - Brief on tools like Chrome DevTools, `node --inspect`, and `node-heapdump`.
-   
-   - **Additional Utilities**  
-     - Mention of tools like `clinic.js`, `memwatch-next`, or any other preferred memory profiling utilities.
-
----
-
-#### 10. **Best Practices for Preventing Memory Leaks in Node.js**
-   - **Guidelines for Managing Event Listeners and Closures**  
-   - **Efficient Use of Global Variables and Caches**  
-   - **Regularly Profiling and Monitoring Memory Usage**
-   - **allways run your jest with --detectLeaks**
-   Always use the function names
-   Trying not to use at all anonymous function Because if any time in the future you will need to use cpu Profiler or memory Profiler, the only thing you will see is anonymous -> anonymous -> fuckmylife -> anonymous
-   If you Will use classes. Instead of anonymous objects. It will be much easier to track memory lakes in the future. 
-
----
-
-#### 11. **Conclusion**
-   - Recap of key points.
-   - Encouragement to incorporate memory management strategies into routine development and testing.
 #### Refs
 https://jestjs.io/blog/2017/12/18/jest-22#experimental-leak-detection
 https://github.com/jestjs/jest/pull/12973
