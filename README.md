@@ -112,23 +112,29 @@ Objects that survive two minor GC cycles are promoted to the old generation, whe
 
 ---
 
-#### 4. **Common Causes of Memory Leaks in Node.js**
-   - **Uncleared Listeners and Event Emitters**  
-     - Every listenr there in JavaScript is a potential memory leak As long as you don't clear the listener All the objects hold reference by closure And all the objects they are referencing to Will not be collected 
+## Common Causes of Memory Leaks in Node.js
 
-Best practice
+1. **Event Listeners**
+   - Every listener is a potential memory leak if not properly cleared
+   - Listeners retain all referenced objects through closures
+   - Even if you're only holding small objects now, future code changes might attach larger objects to them
+   ```javascript
+   // Always pair listener creation with cleanup
+   element.on('data', handler);
+   element.removeListener('data', handler); // Clean up when done
+   ```
 
-Every time you write a listener Also write the code that clear is this listener when it's no longer needed 
+2. **Global Variables**
+   - Objects in global scope persist for the entire application lifetime
+   - What starts as a small object might grow significantly as other developers add data
+   - Avoid storing large objects or using unbounded caches globally
 
-Currently the listen, Eric, and all the reference to Some small object
-But in the future, someone can attach to this object, bigger object, and you're fucked
-   
-   - **Global Variables and Caching**  
-     - Risks of caching too much data or keeping references to large objects in global scope.
-   
-   - **Closures and Function Scopes**  
-     - Issues arising from closures and retaining variables longer than needed.
-   
+3. **Closures**
+   - Variables in closures remain in memory for the function's entire lifetime
+   - Be careful with large objects in long-lived closures
+   - Small initial objects can grow as code evolves
+
+> **Best Practice**: Always plan for cleanup when using listeners, global variables, or closures. Remember that today's small memory footprint might grow significantly as the codebase evolves. 
 
 ---
 
