@@ -1,29 +1,25 @@
-#### 1. **Introduction**
-   The purpose of this repo is to provide tools and tips to debug and prevent memory leaks in node js
+# Memory Leak Detection and Prevention in Node.js
 
-   This repo  will mainly talk about node js But it's also relevant to js On the browser Which is usually less a concern because websites die quite Young And some techniques maybe will apply to other languages as well
-   Especially heep snapshots Comparison
+## Introduction
+This repository provides tools and tips for debugging and preventing memory leaks in Node.js applications. While the focus is on Node.js, many concepts are also applicable to browser-based JavaScript and other languages, especially regarding heap snapshot comparison techniques.
 
-   Important note In this readme, sometimes I will simplify things Just because we don't need to To dive To deep into them 
-   If you really want to go deep into things I attached list of references the end of this file 
+> Note: Some concepts are simplified for clarity. For deeper understanding, please refer to the references section at the end of this document.
 
----
+## What is a Memory Leak?
 
-#### 2. **What is a memory leak**
-I heard somewhere that memory leak
-"It's like not checking out of the room when you leave the hotel. The room is there and you are no longer using it, but it wasn't actually freed and other guests can't use it until it is freed."
-In low level languages like C Only memory leaks is when you allocate memory
-And you forget to release it When it's no longer needed
+A memory leak can be described as:
+> "It's like not checking out of a hotel room when you leave. The room remains occupied but unused, preventing other guests from using it until it's freed."
 
-After John McCarthy invented the garbage collector This is no longer the case since  developers don't need to Allocate or release the memory manualy
+In low-level languages like C, memory leaks occur when allocated memory isn't explicitly released when no longer needed. However, with the invention of garbage collection by John McCarthy, this manual memory management is no longer necessary in many modern languages.
 
-What is garbage collector GC?
-Garbage collector is a piece of code that responsible to track memory that is not used by the program anymore And reclaim it for Usage of this memory in the future, or Releasing the memory to the operation system
+### Garbage Collection Basics
 
+The Garbage Collector (GC) is responsible for:
+- Tracking memory that's no longer used by the program
+- Reclaiming it for future use
+- Releasing memory back to the operating system
 
- what the garbage collector consider is memory that the program doesn't need anymore?
-  an object a variable or a function Or anything else that consume memory that no one holds a reference to it
-  If the program doesn't have a reference to it It means the program cannot use it, and therefore needs to be reclaimed, Which means as long as you have a reference to an object it should never be collected by your garbage collector
+The GC considers memory ready for collection when there are no remaining references to it. As long as your program maintains a reference to an object, it won't be collected.
 
   Our job as developers It's very easy(or at least it seems that way) Don't hold reference to Anything that you don't need anymore 
 
