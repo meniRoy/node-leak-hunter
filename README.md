@@ -14,23 +14,34 @@ In low-level languages like C, memory leaks occur when allocated memory isn't ex
 
 ### Garbage Collection Basics
 
-The Garbage Collector (GC) is responsible for:
-- Tracking memory that's no longer used by the program
-- Reclaiming it for future use
-- Releasing memory back to the operating system
+The Garbage Collector (GC) is a critical component of modern runtime environments that manages memory automatically. Its primary responsibilities include:
 
-The GC considers memory ready for collection when there are no remaining references to it. As long as your program maintains a reference to an object, it won't be collected.
+1. **Memory Tracking**: Monitoring objects and their references in the application
+2. **Memory Reclamation**: Identifying and collecting unused memory for reuse
+3. **Memory Release**: Returning unused memory to the operating system when appropriate
 
-  Our job as developers It's very easy(or at least it seems that way) Don't hold reference to Anything that you don't need anymore 
+#### How GC Determines What to Collect
 
-  So what is a memory leak?
+The GC uses reachability to determine if an object is still needed:
+- An object is considered "reachable" if it can be accessed from root objects through a chain of references
+- Root objects typically include global objects, the call stack, and active function closures
+- Any object that becomes unreachable (has no references pointing to it) is eligible for collection
 
-  Usually People calling memory leaks to Describe the situation when A program Consumption of memory grows over time 
+For example:
+```javascript
+let obj = { data: 'some data' }; // obj is reachable
+obj = null; // original object becomes unreachable and eligible for GC
+```
 
-  When your memory usage graph look Like Warren Buffett investment portfolio Grass looks like 
-   
-  The problem in this case is very obvious. If you run your program for long enough, you will get out of memory error
+#### Developer's Role
 
+While the GC handles memory management automatically, developers still play a crucial role in preventing memory leaks by:
+- Properly releasing references when objects are no longer needed
+- Being mindful of object lifecycles, especially with event listeners and timers
+- Avoiding unnecessary references to large objects
+- Being careful with global variables and caches
+
+A memory leak occurs when the application maintains references to objects that are no longer needed, preventing the GC from collecting them. This leads to gradually increasing memory consumption over time.
 
 ---
 
