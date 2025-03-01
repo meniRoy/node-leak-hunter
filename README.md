@@ -108,8 +108,8 @@ Objects move through memory spaces as they age:
   New objects |      Survived    |     Long-lived
               |    one GC cycle  |       objects  
 ```
-
 Objects that survive two minor GC cycles are promoted to the old generation, where they're managed by the major GC.
+
 ---
 
 #### 4. **Common Causes of Memory Leaks in Node.js**
