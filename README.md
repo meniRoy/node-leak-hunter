@@ -155,6 +155,52 @@ trackObject(myObject, { id: 'important-object' });
 // will automatically be removed
 ```
 
+#### Debugging Memory Leaks with WeakMap
+
+WeakMap provides a production-safe way to debug potential memory leaks. Since WeakMap doesn't prevent garbage collection, you can use it to monitor objects without affecting the application's memory behavior:
+
+```javascript
+// Create a global tracker (only for debugging)
+global.leakTracker = new WeakMap();
+
+function debugTrackObject(obj, metadata) {
+  const trackedData = {
+    createdAt: Date.now(),
+    stack: new Error().stack, // Capture creation stack trace
+    ...metadata
+  };
+  global.leakTracker.set(obj, trackedData);
+}
+
+// Monitor potentially leaking objects
+setInterval(() => {
+  const suspectObject = {/* ... */};
+  debugTrackObject(suspectObject, { 
+    id: 'suspect-' + Date.now(),
+    type: 'UserSession'
+  });
+}, 1000);
+
+// Check for leaks periodically
+setInterval(() => {
+  // Force GC if available (development only)
+  if (global.gc) global.gc();
+  
+  // Try to access some tracked objects
+  const knownObjects = [/* ... list of objects you want to check ... */];
+  
+  knownObjects.forEach(obj => {
+    const data = global.leakTracker.get(obj);
+    if (data) {
+      console.log(`Object ${data.id} still exists after ${
+        (Date.now() - data.createdAt) / 1000
+      } seconds`);
+      console.log('Created at:', data.stack);
+    }
+  });
+}, 60000);
+```
+
 ### 2. FinalizationRegistry for GC Notifications
 
 FinalizationRegistry lets you know when objects are garbage collected:
