@@ -65,19 +65,35 @@ V8's garbage collector (Orinoco) uses a tracing algorithm to manage memory. Here
 
 ### Generational Collection
 
-V8 implements a generational garbage collection strategy based on the "Generational Hypothesis" - the observation that most objects die young. This leads to two distinct garbage collection mechanisms:
+V8 implements a generational garbage collection strategy based on the "Generational Hypothesis" - the observation that most objects die young. This means:
+
+1. Most objects are created, used briefly, and then become garbage quickly
+   ```javascript
+   function processRequest(req) {
+     const tempData = { ... }  // Created
+     doSomething(tempData)     // Used briefly
+     return result             // Now eligible for GC
+   }
+   ```
+
+2. Objects that survive longer tend to live much longer
+   ```javascript
+   // Long-lived objects example
+   const server = new Server()  // Lives for entire program
+   const cache = new Cache()    // Lives for entire program
+   ```
+
+This behavior pattern led V8 to implement two distinct garbage collection mechanisms, each optimized for different object lifetimes:
 
 1. **Minor GC (Scavenger)**
-   - Handles newly allocated objects in the "young generation"
-   - Fast and runs frequently
-   - Less resource-intensive
-   - Only scans new objects
+   - Focuses on new, short-lived objects
+   - Runs frequently and quickly
+   - Perfect for those temporary objects in your request handlers
 
 2. **Major GC (Mark-Compact)**
-   - Processes the entire heap including old objects
-   - Runs less frequently
-   - More resource-intensive
-   - Performs memory compaction
+   - Handles longer-lived objects
+   - Runs less frequently but more thoroughly
+   - Deals with those persistent server and cache objects
 
 Objects move through memory spaces as they age:
 
@@ -95,8 +111,6 @@ New objects|   Survived    |  Long-lived
 ```
 
 Objects that survive two minor GC cycles are promoted to the old generation, where they're managed by the major GC.
-
-
 ---
 
 #### 4. **Common Causes of Memory Leaks in Node.js**
