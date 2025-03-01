@@ -261,70 +261,72 @@ function checkForLeaks() {
    - Callbacks in FinalizationRegistry may be delayed or batched
 
 
-## **Heap Dump comparison using the Snip3 Hunt Method**
+## Heap Dump Comparison Using the Snip3 Hunt Method
+
+Heap dump analysis can show what objects are leaking memory, but it doesn't identify where in the code the issue originates. The biggest challenge in using heap dump comparisons to detect memory leaks is separating useful information from noise.
+
+### The Simple Method
+
+Many guides suggest this basic approach for memory leak detection:
+
+1. Create a snapshot when the application starts
+2. Run the application for an extended period
+3. Take another snapshot
+4. Compare the snapshots to identify the largest leaking objects
+
+### Why the Simple Method Fails
+
+While this method works for simple examples, it often fails in complex, real-world scenarios. Let's understand why:
+
+#### Expectation vs Reality
+
+In simple examples, memory snapshot comparisons look clean and straightforward:
+```
+Simple Example:
+leaked object A: +1000 bytes
+Object B: +500 bytes
+```
+
+However, in real-world applications, comparisons are overwhelmingly complex:
+```
+Real World:
+... (thousands of entries)
+Object A: +1.2MB
+Object B: +800KB
+Object C -> D -> leaked object E: +2.3MB
+... (thousands more entries)
+```
+
+This complexity often leaves developers frustrated and reaching for quick fixes, such as automated server restarts through Kubernetes.
+
+#### Understanding Application Memory Lifecycle
+
+To understand why this happens, let's examine how memory is allocated throughout an application's lifecycle:
+
+1. **Initial Allocation**
+   - Server allocates memory for core components (database connections, etc.)
+   - First GC run reduces memory to essential objects only
+
+2. **Endpoint Operations**
+   - New memory allocated for request handling
+   - Some objects are temporary (GC collectable)
+   - Others are retained for endpoint functionality
+   - Small memory leaks may occur
+
+3. **The Comparison Problem**
+   - When comparing heap dumps after GC runs, you see:
+     - Necessary retained memory
+     - Actual memory leaks
+     - Various temporary allocations
+   - This mixture creates significant noise, making leak detection difficult
+
+![Memory Leak Detection Graph](./assets/final_drop_to_55_memory_leak_graph.png)
+
+Fortunately, there's a better approach to handle this complexity, which we'll explore in the next section...
+
+### **Snip3 Hunt Method the Improved Memory Leak Detection Approach**
+
 By following this approach, you can significantly improve the clarity of your heap dump comparisons and identify memory leaks more effectively. This methodology provides a structured way to isolate leaks while minimizing noise, making debugging in real-world applications far more manageable.
-
-
-**Heap Dump Analysis: Challenges and an Improved Approach**
-
-Heap dump analysis can show what is leaking, but it dosnot identify where in the code the issue originates. The biggest challenge in using heap dump comparisons to detect memory leaks is separating useful information from noise.
-
-Anyone who has tried to debug a memory leak in a real-world application using heap dumps knows how difficult it can be to identify what is leaking—even before considering where the leak originates. many advisors suggest the following approach: 
-
-1. Create a snapshot when the application starts.  
-2. Run the application for an extended period.  
-3. Take another snapshot.  
-4. Compare the snapshots to identify the largest leaking objects.
-
-While this method may work for simple examples, it fails in complex, real-world scenarios. 
-
-the reason is that in the exmples the memory snapshots compersion looks like this:  
-
-
--- show image of simple meory snapshot comprions  
-
-
-but in the real world it looks like this  
-
-
--- show image of very big heap snapshot comprision
-
-
-and you will look like this  
-
-
--- show image of very Disappointed developer
-
-In practice, after running an application for a few days to "trigger" the memory leak, you often end up with so much noise that it’s nearly impossible to find the root cause. This is the point where some developers resort to quick fixes, such as restarting the server after every 10 calls—a workaround that can even be automated using tools like Kubernetes.
-
-the reason for that is how appliciton memory lif sycle looks like:
-
-Let's look how memories are alocated For the lifetime of our Application
-
-In the beginning, the server allocates a significant amount of memory for initializing objects such as database connections. After the garbage collector (GC) runs, the memory usage is reduced, leaving only the necessary objects.
-
-When the first endpoint is called, additional memory is allocated for initializing various objects. Some of these objects are temporary and will be collected by the GC, while others are retained as they are necessary for the operation of the endpoint.
-
-Additionally, a small memory leak exists. By comparing heap dumps taken immediately after the first GC and the second GC, you can observe the memory leak alongside a significant amount of necessary memory allocations.
-
-This creates a lot of noise in the comparison as we already discussed and it's very hard to Investigate what is the object leakingLet's look how memories are alocated For the lifetime of our Application
-
-In the beginning, the server allocates a significant amount of memory for initializing objects such as database connections. After the garbage collector (GC) runs, the memory usage is reduced, leaving only the necessary objects.
-
-When the first endpoint is called, additional memory is allocated for initializing various objects. Some of these objects are temporary and will be collected by the GC, while others are retained as they are necessary for the operation of the endpoint.
-
-Additionally, a small memory leak exists. By comparing heap dumps taken immediately after the first GC and the second GC, you can observe the memory leak alongside a significant amount of necessary memory allocations.
-
-This creates a lot of noise in the comparison as we already discussed and it's very hard to Investigate what is the object leaking
-![alt text](./assets/final_drop_to_55_memory_leak_graph.png)
-
-
-
-However, there is a better solution: analyzing memory allocations throughout the application's lifecycle. Here's how to do it step by step:
-
----
-
-### **Improved Memory Leak Detection Approach**
 
 1. **Initial Setup and Noise Reduction**
    - Begin by disabling modules unrelated to the area you're investigating to reduce noise.
