@@ -37,8 +37,8 @@ obj = null; // original object becomes unreachable and eligible for GC
 
 While the GC handles memory management automatically, developers still play a crucial role in preventing memory leaks by:
 - Properly releasing references when objects are no longer needed
-- Being mindful of object lifecycles, especially with event listeners and timers
-- Avoiding unnecessary references to large objects
+- Being mindful of object lifecycles, especially with event listeners
+- Avoiding unnecessary references to objects
 - Being careful with global variables and caches
 
 A memory leak occurs when the application maintains references to objects that are no longer needed, preventing the GC from collecting them. This leads to gradually increasing memory consumption over time.
