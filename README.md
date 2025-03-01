@@ -261,7 +261,7 @@ function checkForLeaks() {
    - Callbacks in FinalizationRegistry may be delayed or batched
 
 
-#### 7. **Using the Snip3 Hunt Method**
+## **Heap Dump comparison using the Snip3 Hunt Method**
 By following this approach, you can significantly improve the clarity of your heap dump comparisons and identify memory leaks more effectively. This methodology provides a structured way to isolate leaks while minimizing noise, making debugging in real-world applications far more manageable.
 
 
