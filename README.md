@@ -172,14 +172,16 @@ function debugTrackObject(obj, metadata) {
   global.leakTracker.set(obj, trackedData);
 }
 
-// Monitor potentially leaking objects
-setInterval(() => {
-  const suspectObject = {/* ... */};
-  debugTrackObject(suspectObject, { 
-    id: 'suspect-' + Date.now(),
-    type: 'UserSession'
+// Monitor Express request objects for memory leaks
+app.use((req, res, next) => {
+  debugTrackObject(req, {
+    id: `request-${Date.now()}`,
+    type: 'ExpressRequest',
+    url: req.url,
+    method: req.method
   });
-}, 1000);
+  next();
+});
 
 // Check for leaks periodically
 setInterval(() => {
