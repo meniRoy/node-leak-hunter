@@ -147,6 +147,9 @@ Objects that survive two minor GC cycles are promoted to the old generation, whe
 
 WeakMap is a powerful tool for tracking object references without preventing garbage collection:
 
+A WeakMap holds "weak" references to objects used as keys, meaning those objects can still be garbage collected if there are no other references to them. Unlike regular Maps, WeakMaps only accept objects as keys and automatically remove entries when their key objects are garbage collected.
+
+
 ```javascript
 const tracker = new WeakMap();
 
