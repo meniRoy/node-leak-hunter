@@ -43,56 +43,58 @@ While the GC handles memory management automatically, developers still play a cr
 
 A memory leak occurs when the application maintains references to objects that are no longer needed, preventing the GC from collecting them. This leads to gradually increasing memory consumption over time.
 
----
+## Understanding Memory Leaks in Node.js
 
-#### 3. **Understanding Memory Leaks in Node.js**
-In order to understand, better memory, leaks, and how to handle them first of all, we need to understand how the garbage collector V8 works
- v8 gc Is responsible Deduction of unused Memory And reuse the memory occupied by dead objects
+Node.js uses V8 as its JavaScript engine, which includes a sophisticated garbage collection system. Understanding how V8's garbage collector works is crucial for preventing and debugging memory leaks.
 
- The algorithm V8 GC (Orinoco) uses is (The tracing algorithm)[https://en.wikipedia.org/wiki/Tracing_garbage_collection]
- Which basically means In order to know which objects are not in use aka Dead objects and need to be Reclaimed
- We trace a set of root objects Every object that is reachable From those root objects Is an object that can be used by the program and therefore is a alive
+### V8 Garbage Collector Overview
 
- Any other object is a dead object that no one needs anymore
+V8's garbage collector (Orinoco) uses a tracing algorithm to manage memory. Here's how it works:
 
- In a V8, those objects are the stack end global object 
- *** First tip Any object that is attached, directly or indirectly (by his parent or grandparent object) to the global is going to be alive for the entire time of the application, and there for never be released 
-Don't attach anything (that you don't actually need) to the global 
+1. **Root Objects**: The GC starts from a set of root objects, which include:
+   - Global objects (`global` in Node.js, `window` in browsers)
+   - Local variables in the current call stack
+   - Active closures and their variables
 
-Functions in the stack can Hold reference to objects by closure 
-If you don't know what closure is, that's the time to go read about that
+2. **Tracing Process**: 
+   - The GC traces through all references starting from these root objects
+   - Any object reachable through this tracing is considered "alive"
+   - Unreachable objects are marked as candidates for collection
 
+> **Important**: Any object attached to the global scope (directly or indirectly) will remain alive for the entire application lifetime. Be cautious about adding properties to global objects.
 
+### Generational Collection
 
+V8 implements a generational garbage collection strategy based on the "Generational Hypothesis" - the observation that most objects die young. This leads to two distinct garbage collection mechanisms:
 
-   
-   - **How the Garbage Collector (GC) Works in Node.js**  
+1. **Minor GC (Scavenger)**
+   - Handles newly allocated objects in the "young generation"
+   - Fast and runs frequently
+   - Less resource-intensive
+   - Only scans new objects
 
-   In garbage collection there is an important term: “The Generational Hypothesis”. This basically states that most objects die young. In other words, most objects are allocated and then almost immediately become unreachable, from the perspective of the GC. This holds not only for V8 or JavaScript, but for most dynamic languages.
+2. **Major GC (Mark-Compact)**
+   - Processes the entire heap including old objects
+   - Runs less frequently
+   - More resource-intensive
+   - Performs memory compaction
 
-   Leveraging this fact are two GCs in V8 
-     - Minor GC (Scavenger)
-     - Major GC (Mark-Compact)Leveraging
-    the Scavenger is Quicker And handles only new objects 
+Objects move through memory spaces as they age:
 
-
-    the Major GC Is slower Consume more resources And responsible for the entire heep
-
-the Minor GC runs more often then the majro gc
-    
-v8 will promote objects, not garbage collected after two Scavenge operations to the old space.
 ```
-        young generation         |   old generation
-                                 |
-  nursery     |  intermediate    |
-              |                  |
- +--------+   |     +--------+   |     +--------+
- | object |---GC--->| object |---GC--->| object |
- +--------+   |     +--------+   |     +--------+
-              |                  |
+Young Generation              |  Old Generation
+                            |
+Nursery    | Intermediate   |
+           |               |
++--------+ |  +--------+   |  +--------+
+| Object |--->| Object |----->| Object |
++--------+ |  +--------+   |  +--------+
+   ^       |               |
+New objects|   Survived    |  Long-lived
+           | one GC cycle  |   objects
 ```
 
-
+Objects that survive two minor GC cycles are promoted to the old generation, where they're managed by the major GC.
 
 
 ---
