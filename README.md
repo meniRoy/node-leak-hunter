@@ -242,33 +242,6 @@ function checkForLeaks() {
 
 ```
 
-### 4. Memory Usage Monitoring
-
-Track memory usage over time to identify patterns:
-
-```javascript
-function monitorMemory(intervalMs = 1000) {
-  let baseline = process.memoryUsage().heapUsed;
-  
-  return setInterval(() => {
-    const current = process.memoryUsage().heapUsed;
-    const diff = current - baseline;
-    
-    console.log(`Memory change: ${diff / 1024 / 1024} MB`);
-    if (diff > 100 * 1024 * 1024) { // Alert if growth > 100MB
-      console.warn('Potential memory leak detected!');
-    }
-    
-    baseline = current;
-  }, intervalMs);
-}
-
-// Remember to clear the interval when done
-const monitor = monitorMemory();
-// later...
-clearInterval(monitor);
-```
-
 ### Important Notes:
 
 1. **Manual GC Usage**:
