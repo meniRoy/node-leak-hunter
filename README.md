@@ -98,16 +98,15 @@ This behavior pattern led V8 to implement two distinct garbage collection mechan
 Objects move through memory spaces as they age:
 
 ```
-Young Generation              |  Old Generation
-                            |
-Nursery    | Intermediate   |
-           |               |
-+--------+ |  +--------+   |  +--------+
-| Object |--->| Object |----->| Object |
-+--------+ |  +--------+   |  +--------+
-   ^       |               |
-New objects|   Survived    |  Long-lived
-           | one GC cycle  |   objects
+        young generation         |   old generation
+                                 |
+  nursery     |  intermediate    |
+              |                  |
+ +--------+   |     +--------+   |     +--------+
+ | object |---GC--->| object |---GC--->| object |
+ +--------+   |     +--------+   |     +--------+
+  New objects |      Survived    |     Long-lived
+              |    one GC cycle  |       objects  
 ```
 
 Objects that survive two minor GC cycles are promoted to the old generation, where they're managed by the major GC.
