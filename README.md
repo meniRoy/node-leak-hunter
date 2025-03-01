@@ -132,24 +132,107 @@ But in the future, someone can attach to this object, bigger object, and you're 
 
 ---
 
-#### 5. **Using `WeakMap` and FinalizationRegistry to Detect Garbage Collection (GC) Activity**
-   - **Introduction to `WeakMap`**  
-     - Explanation of how `WeakMap` works in JavaScript.
-   
-   - **Tracking Object Collection with `WeakMap`**  
-     - Using `WeakMap` to see if objects are garbage-collected, providing insight into potential memory leaks.
-  - FinalizationRegistry
-   
----
+## Tips and Tricks for Debugging Memory Leaks
 
-#### 6. **Forcing Garbage Collection in Node.js (Manual GC Trigger)**
-   - **How to Trigger Garbage Collection in Node.js**  
-     - Using the `--expose-gc` flag and calling `global.gc()` for debugging purposes.
-   
-   - **When and Why to Use Manual GC**  
-     - Guidelines for using manual GC for memory testing only, not in production.
+### 1. Using WeakMap for Reference Tracking
 
----
+WeakMap is a powerful tool for tracking object references without preventing garbage collection:
+
+```javascript
+const tracker = new WeakMap();
+
+function trackObject(obj, metadata) {
+  tracker.set(obj, {
+    createdAt: Date.now(),
+    ...metadata
+  });
+}
+
+// Usage
+const myObject = { /* ... */ };
+trackObject(myObject, { id: 'important-object' });
+// If myObject becomes unreachable, its entry in tracker
+// will automatically be removed
+```
+
+### 2. FinalizationRegistry for GC Notifications
+
+FinalizationRegistry lets you know when objects are garbage collected:
+
+```javascript
+const registry = new FinalizationRegistry((heldValue) => {
+  console.log(`Object with ID ${heldValue} was garbage collected`);
+});
+
+function createTrackedObject() {
+  const obj = { /* ... */ };
+  registry.register(obj, "object-123");
+  return obj;
+}
+```
+
+### 3. Manual GC Triggering for Testing
+
+For debugging purposes, you can manually trigger garbage collection:
+
+```bash
+# Start Node.js with GC exposure
+node --expose-gc your-script.js
+```
+
+```javascript
+// In your code
+function checkForLeaks() {
+  const initialMemory = process.memoryUsage().heapUsed;
+  
+  // Force GC
+  global.gc();
+  
+  const afterGC = process.memoryUsage().heapUsed;
+  console.log(`Memory change: ${(afterGC - initialMemory) / 1024 / 1024} MB`);
+}
+
+```
+
+### 4. Memory Usage Monitoring
+
+Track memory usage over time to identify patterns:
+
+```javascript
+function monitorMemory(intervalMs = 1000) {
+  let baseline = process.memoryUsage().heapUsed;
+  
+  return setInterval(() => {
+    const current = process.memoryUsage().heapUsed;
+    const diff = current - baseline;
+    
+    console.log(`Memory change: ${diff / 1024 / 1024} MB`);
+    if (diff > 100 * 1024 * 1024) { // Alert if growth > 100MB
+      console.warn('Potential memory leak detected!');
+    }
+    
+    baseline = current;
+  }, intervalMs);
+}
+
+// Remember to clear the interval when done
+const monitor = monitorMemory();
+// later...
+clearInterval(monitor);
+```
+
+### Important Notes:
+
+1. **Manual GC Usage**:
+   - Only use manual GC triggering in development/testing
+   - Never use in production as it can impact performance
+   - Useful for creating reproducible test cases
+
+2. **WeakMap and FinalizationRegistry**:
+   - Use WeakMap when you need to associate data with objects without preventing GC
+   - FinalizationRegistry is great for debugging but don't rely on it for critical functionality
+   - Callbacks in FinalizationRegistry may be delayed or batched
+
 
 #### 7. **Using the Snip3 Hunt Method**
 By following this approach, you can significantly improve the clarity of your heap dump comparisons and identify memory leaks more effectively. This methodology provides a structured way to isolate leaks while minimizing noise, making debugging in real-world applications far more manageable.
