@@ -374,6 +374,3 @@ https://dev.to/codux/experiments-with-the-javascript-garbage-collector-2ae3
 https://github.com/nodejs/node/issues/53335
 https://github.com/nodejs/node/blob/main/test/parallel/test-primitive-timer-leak.js#L15
 https://github.com/nodejs/node/blob/main/test/common/gc.js
-
-### Research
-check if global.gc call minor or Major gc
