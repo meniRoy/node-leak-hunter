@@ -66,11 +66,26 @@ V8's garbage collector (Orinoco) uses a tracing algorithm to manage memory. Here
 ![Memory Leak Detection Graph](./assets/image.png)
 
 
-### Generational Collection
+### GC Performance and Main Thread Blocking
 
-V8 implements a generational garbage collection strategy based on the "Generational Hypothesis" - the observation that most objects die young. This means:
+A critical consideration in garbage collection is its impact on application performance. GC operations can block the main JavaScript thread, potentially causing noticeable pauses in application execution. These pauses can range from milliseconds to seconds depending on heap size and collection type.
 
-1. Most objects are created, used briefly, and then become garbage quickly
+To minimize these disruptions while maintaining efficient memory management, V8 implements a generational garbage collection strategy. This approach is based on two key observations:
+
+1. Most objects die young (the "Generational Hypothesis")
+2. Different types of objects need different collection frequencies and strategies
+
+#### Generational Collection Strategy
+
+V8's solution uses two distinct garbage collection mechanisms, each optimized for different object lifetimes:
+
+1. **Minor GC (Scavenger)**
+   - Focuses on new, short-lived objects
+   - Very fast and efficient
+   - Runs frequently (multiple times per second)
+   - Only scans the young generation
+   - Takes microseconds to milliseconds
+   - Perfect for temporary objects like request handlers
    ```javascript
    function processRequest(req) {
      const tempData = { ... }  // Created
@@ -79,24 +94,18 @@ V8 implements a generational garbage collection strategy based on the "Generatio
    }
    ```
 
-2. Objects that survive longer tend to live much longer
+2. **Major GC (Mark-Compact)**
+   - Handles longer-lived objects
+   - More thorough but slower
+   - Runs less frequently
+   - Scans the entire heap
+   - Takes milliseconds to seconds in large heaps
+   - Deals with persistent objects like:
    ```javascript
    // Long-lived objects example
    const server = new Server()  // Lives for entire program
    const cache = new Cache()    // Lives for entire program
    ```
-
-This behavior pattern led V8 to implement two distinct garbage collection mechanisms, each optimized for different object lifetimes:
-
-1. **Minor GC (Scavenger)**
-   - Focuses on new, short-lived objects
-   - Runs frequently and quickly
-   - Perfect for those temporary objects in your request handlers
-
-2. **Major GC (Mark-Compact)**
-   - Handles longer-lived objects
-   - Runs less frequently but more thoroughly
-   - Deals with those persistent server and cache objects
 
 Objects move through memory spaces as they age:
 
@@ -111,7 +120,10 @@ Objects move through memory spaces as they age:
   New objects |      Survived    |     Long-lived
               |    one GC cycle  |       objects  
 ```
-Objects that survive two minor GC cycles are promoted to the old generation, where they're managed by the major GC.
+
+Objects that survive two minor GC cycles are promoted to the old generation, where they're managed by the major GC. This two-tier approach helps balance garbage collection thoroughness with application responsiveness. The fast, frequent minor GC handles most temporary allocations without significant performance impact, while the occasional major GC ensures comprehensive memory cleanup.
+
+> **Note**: V8 continues to improve its GC implementation with features like incremental marking, concurrent marking, and parallel scavenging to reduce main thread blocking. These optimizations are beyond the scope of this article but have significantly improved GC performance in recent years.
 
 ---
 
