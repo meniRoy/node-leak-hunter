@@ -155,77 +155,81 @@ Objects that survive two minor GC cycles are promoted to the old generation, whe
 
 ## Tips and Tricks for Debugging Memory Leaks
 
-### 1. Using WeakMap for Reference Tracking
+### 1. Using WeakRef for Reference Tracking
 
-WeakMap is a powerful tool for tracking object references without preventing garbage collection:
+A WeakRef holds a "weak" reference to an object, meaning the referenced object can still be garbage collected if there are no other strong references to it. This makes WeakRef ideal for tracking objects for debugging purposes without interfering with normal garbage collection behavior.
 
-A WeakMap holds "weak" references to objects used as keys, meaning those objects can still be garbage collected if there are no other references to them. Unlike regular Maps, WeakMaps only accept objects as keys and automatically remove entries when their key objects are garbage collected.
-
-
-```javascript
-const tracker = new WeakMap();
-
-function trackObject(obj, metadata) {
-  tracker.set(obj, {
-    createdAt: Date.now(),
-    ...metadata
-  });
-}
-
-// Usage
-const myObject = { /* ... */ };
-trackObject(myObject, { id: 'important-object' });
-// If myObject becomes unreachable, its entry in tracker
-// will automatically be removed
-```
-
-#### Debugging Memory Leaks with WeakMap
-
-WeakMap provides a production-safe way to debug potential memory leaks. Since WeakMap doesn't prevent garbage collection, you can use it to monitor objects without affecting the application's memory behavior:
+WeakRef provides a powerful way to track object references without preventing garbage collection:
 
 ```javascript
-// Create a global tracker (only for debugging)
-global.leakTracker = new WeakMap();
+// Simple memory leak detector using WeakRef
+const leakDetector = {
+  registry: [],
+  
+  // Track an object for potential leaks
+  track(obj, name = `obj-${Date.now()}`) {
+    this.registry.push({
+      name,
+      ref: new WeakRef(obj),
+      createdAt: Date.now(),
+      stack: new Error().stack.split('\n').slice(1, 4).join('\n') // Simplified stack
+    });
+    return name;
+  },
+  
+  // Check for potential memory leaks
+  check(olderThanSeconds = 60) {
+    // Trigger GC if available (requires --expose-gc flag)
+    if (global.gc) global.gc();
+    
+    console.log(`Checking ${this.registry.length} tracked objects...`);
+    const now = Date.now();
+    const leaks = [];
+    
+    // Filter registry and collect leaks
+    this.registry = this.registry.filter(entry => {
+      const obj = entry.ref.deref();
+      if (!obj) {
+        // Object was garbage collected
+        return false;
+      }
+      
+      // Check if it's been around too long
+      const ageSeconds = (now - entry.createdAt) / 1000;
+      if (ageSeconds > olderThanSeconds) {
+        leaks.push({
+          name: entry.name,
+          age: `${ageSeconds.toFixed(1)}s`,
+          stack: entry.stack
+        });
+      }
+      return true;
+    });
+    
+    // Report leaks
+    if (leaks.length > 0) {
+      console.log('POTENTIAL LEAKS:');
+      console.table(leaks);
+    } else {
+      console.log('No leaks detected');
+    }
+  }
+};
 
-function debugTrackObject(obj, metadata) {
-  const trackedData = {
-    createdAt: Date.now(),
-    stack: new Error().stack, // Capture creation stack trace
-    ...metadata
-  };
-  global.leakTracker.set(obj, trackedData);
-}
+// Make globally available
+global.leakDetector = leakDetector;
 
-// Monitor Express request objects for memory leaks
+// Example usage with Express
 app.use((req, res, next) => {
-  debugTrackObject(req, {
-    id: `request-${Date.now()}`,
-    type: 'ExpressRequest',
-    url: req.url,
-    method: req.method
-  });
+  leakDetector.track(req, `req-${req.method}-${req.url}`);
   next();
 });
 
-// Check for leaks periodically
-setInterval(() => {
-  // Force GC if available (development only)
-  if (global.gc) global.gc();
-  
-  // Try to access some tracked objects
-  const knownObjects = [/* ... list of objects you want to check ... */];
-  
-  knownObjects.forEach(obj => {
-    const data = global.leakTracker.get(obj);
-    if (data) {
-      console.log(`Object ${data.id} still exists after ${
-        (Date.now() - data.createdAt) / 1000
-      } seconds`);
-      console.log('Created at:', data.stack);
-    }
-  });
-}, 60000);
+// Check periodically
+setInterval(() => leakDetector.check(60), 30000);
 ```
+
+
 
 ### 2. FinalizationRegistry for GC Notifications
 
