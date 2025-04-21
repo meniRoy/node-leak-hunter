@@ -369,7 +369,7 @@ By following this approach, you can significantly improve the clarity of your he
 
 5. **Comparison for Leak Identification**
    - Compare memory allocations between snapshot 1 and snapshot 2. Identify memory that was allocated but not removed by the GC in snapshot 3.
-   - This method filters out 99% of the noise caused by temporary allocations, leaving only the true memory leak.
+   - This method filters out 80% of the noise caused by temporary allocations, leaving only the true memory leak.
 
 
 

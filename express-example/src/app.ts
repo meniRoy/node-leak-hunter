@@ -19,9 +19,6 @@ const port = process.env.PORT || 8000;
 
 // MongoDB setup
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/leakDb';
-mongoose.connect(mongoURI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.error("Could not connect to MongoDB:", err));
 
 // Define a simple schema and model for demonstration
 const ItemSchema = new mongoose.Schema({
@@ -42,19 +39,10 @@ app.get('/', (req: Request, res: Response) => {
 
 // Leak endpoints
 app.get('/leak', (req: Request, res: Response) => {
-  leak.push(new Leak());
+  leak.push({name: generateRandomString(10000), age: 0, lastName: generateRandomString(10000)});
   res.send('Memory leak added');
 });
 
-app.get('/leak-req', (req: Request, res: Response) => {
-  leak.push(req);
-  res.send('Request added to leak array');
-});
-
-app.get('/leak-hard', (req: Request, res: Response) => {
-  (global as any)[generateRandomString(10)] = generateRandomString(100);
-  res.send('Hard leak created');
-});
 
 app.get('/snap', (req: Request, res: Response) => {
   writeHeapSnapshot();
@@ -102,10 +90,15 @@ cron.schedule('*/10 * * * * *', async () => {
     console.error("Error in background job:", error);
   }
 });
+writeHeapSnapshot()
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
+mongoose.connect(mongoURI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.error("Could not connect to MongoDB:", err));
 
 function generateRandomString(length:number) {
     const array = new Uint8Array(length);

@@ -12,14 +12,6 @@ async function callLeak() {
   return axios.get(`${serverUrl}/leak`);
 }
 
-async function callLeakReq() {
-  return axios.get(`${serverUrl}/leak-req`);
-}
-
-async function callLeakHard() {
-  return axios.get(`${serverUrl}/leak-hard`);
-}
-
 async function callSnap() {
   return axios.get(`${serverUrl}/snap`);
 }
@@ -30,8 +22,7 @@ async function callSnapGc() {
 
 async function createItem(name: string, description: string) {
     try {
-      const response = await axios.post(`${serverUrl}/items`, { name, description });
-      console.log('Item Created:', response.data);
+     await axios.post(`${serverUrl}/items`, { name, description });
     } catch (error) {
       console.error('Error creating item:', error);
     }
@@ -51,8 +42,6 @@ async function createItem(name: string, description: string) {
 const endpointFunctions: { [key: string]: () => Promise<any> } = {
     root: callRoot,
     leak: callLeak,
-    'leak-req': callLeakReq,
-    'leak-hard': callLeakHard,
     snap: callSnap,
     'snap-gc': callSnapGc,
     'list':listItems,
@@ -87,7 +76,7 @@ async function callEndpoint(endpoint: keyof typeof endpointFunctions, times: num
 // Usage example
 (async () => {
   // Example usage: Call the 'leak' endpoint 5 times with a 2-second delay between calls
-//   await callEndpoint('root', 10, 2);
+  await callEndpoint('root', 10, 2);
   await callEndpoint('snap-gc',1,1)
 
   await callEndpoint('leak',20,1)
